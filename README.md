@@ -43,7 +43,7 @@ API Container
 - Mac OS Running recent version (Not tested on Windows)
 - Docker Desktop
 - AWS CLI V2 Installed.
-- AWS Credentials AccessKey and SecretKey saved to profile [production-apps]. see steps below.
+- Run aws configure sso and choose Commerce7 as session name, select Commerce7Apps account, choose the role, use default region and profile name to nofraud.
 - Domain registered in AWS Route53 or at a minimum the DNS hosted by Route53 for the domain.
 
 #### Initial setup
