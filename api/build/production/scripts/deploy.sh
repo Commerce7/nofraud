@@ -1,10 +1,24 @@
 #!/bin/zsh
 
 # Set Credentials
-export AWS_ACCESS_KEY_ID=$(aws configure get production_apps.aws_access_key_id)
-export AWS_SECRET_ACCESS_KEY=$(aws configure get production_apps.aws_secret_access_key)
-export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
+if aws --profile nofraud sts get-caller-identity > /dev/null; then
+ echo "SESSION TOKEN VALID"
+sessioncredentials=$(aws configure export-credentials --profile nofraud)
+export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' <<< ${sessioncredentials})
+export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' <<< ${sessioncredentials})
+export AWS_SESSION_TOKEN=$(jq -r '.SessionToken' <<< ${sessioncredentials})
+ else
+ echo "SESSION TOKEN EXPIRED - LOGIN TO REFRESH TOKEN"
+unset AWS_SESSION_TOKEN
+
+aws sso login --profile nofraud
+
+sessioncredentials=$(aws configure export-credentials --profile nofraud)
+export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' <<< ${sessioncredentials})
+export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' <<< ${sessioncredentials})
+export AWS_SESSION_TOKEN=$(jq -r '.SessionToken' <<< ${sessioncredentials})
+fi
 # export envars with underscore
 export $(egrep -v '^#' .env | xargs)
 
