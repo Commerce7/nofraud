@@ -253,3 +253,48 @@ Resources:
   #     CodeUri: ./auth
   #     Handler: authorizer.handler
   #     Runtime: nodejs20.x
+
+
+  ApproximateAgeOfOldestMessageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "SQS-ApproximateAgeOfOldestMessageAlarm-${SqsQueue.QueueName}"
+      AlarmDescription: "Alarms when an SQS Queue has ApproximateAgeOfOldestMessage is greater than 900 seconds"
+      ActionsEnabled: true
+      AlarmActions:
+        - arn:aws:sns:us-west-2:476585829977:slack-security-notifications
+      OKActions:
+        - arn:aws:sns:us-west-2:476585829977:slack-security-notifications
+      InsufficientDataActions: []
+      MetricName: ApproximateAgeOfOldestMessage
+      Namespace: AWS/SQS
+      Statistic: Maximum
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt SqsQueue.QueueName
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 900
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
+
+  LambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::StackName}-APP-Lambda-Errors'
+      AlarmDescription: !Sub 'Errors alarm for ${AWS::StackName}-APP Lambda function'
+      AlarmActions:
+        - arn:aws:sns:us-west-2:476585829977:slack-security-notifications
+      OKActions:
+        - arn:aws:sns:us-west-2:476585829977:slack-security-notifications
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref APP
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
