@@ -116,7 +116,7 @@ export const fraudStatusWebhookFromSQS = async (message) => {
     securityObj,
     params.id
   );
-  const id = c7Order.id;
+  const { id } = c7Order;
   const c7OrderId = c7Order.attempts[0].orderSyncId;
   console.log('----------------------------6', c7OrderId);
 
@@ -181,11 +181,6 @@ const attemptSyncWithNoFraud = async (securityObj, c7order) => {
 
   if (!c7order.customer) {
     const response = invalidCustomer();
-    return response;
-  }
-
-  if (c7order.orderDeliveryMethod !== 'Ship') {
-    const response = invalidOrderDeliveryMethod();
     return response;
   }
 
@@ -515,20 +510,6 @@ const invalidCustomer = () => {
     errors: [
       {
         message: `Order does not have a Customer`
-      }
-    ]
-  };
-  return response;
-};
-
-const invalidOrderDeliveryMethod = () => {
-  const now = new Date();
-  const response = {
-    attemptDate: now.toISOString(),
-    type: 'Not Required',
-    errors: [
-      {
-        message: `Order is not a shipping order`
       }
     ]
   };
