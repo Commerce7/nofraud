@@ -394,13 +394,17 @@ const noFraudPayload = async (securityObj, settings, c7order) => {
     amount: decimalFormat(c7order.total),
     gatewayName: getGateway(c7Settings),
     gatewayStatus: 'pass',
-    cardAttempts: creditCardAttemptCount(c7order),
+    cardAttempts: String(creditCardAttemptCount(c7order)),
     customerIP: c7order.connectionInformation.customerIpAddress,
     avsResultCode: 'U', // TODO - what is this
     cvvResultCode: '1', // TODO - what is this
     currencyCode: c7Settings.currency,
+    merchant: {
+      name: securityObj.tenantId,
+      productType: 'Goods'
+    },
     order: {
-      invoiceNumber: c7order.orderNumber,
+      invoiceNumber: String(c7order.orderNumber),
       orderType: 'one-time'
     },
     billTo: {
