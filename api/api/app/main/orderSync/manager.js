@@ -413,8 +413,10 @@ const noFraudPayload = async (securityObj, settings, c7order) => {
       zip: billTo.zipCode,
       country: billTo.countryCode || '',
       phoneNumber: billTo.phone || ''
-    },
-    shipTo: {
+    }
+  };
+  if (c7order.orderDeliveryMethod === 'Ship') {
+    payload.shipTo = {
       firstName: shipTo.firstName || '',
       lastName: shipTo.lastName || '',
       company: shipTo.company || '',
@@ -423,8 +425,19 @@ const noFraudPayload = async (securityObj, settings, c7order) => {
       state: shipTo.stateCode || '',
       zip: shipTo.zipCode || '',
       country: shipTo.countryCode || ''
-    }
-  };
+    };
+  } else {
+    payload.shipTo = {
+      firstName: billTo.firstName || '',
+      lastName: billTo.lastName || '',
+      company: billTo.company || '',
+      address: billTo.address,
+      city: billTo.city || '',
+      state: billTo.stateCode || '',
+      zip: billTo.zipCode,
+      country: billTo.countryCode || ''
+    };
+  }
 
   const firstCreditCard = c7order.tenders.find(
     (t) => t.tenderType === 'Credit Card' && t.chargeStatus === 'Success'
@@ -461,7 +474,13 @@ const noFraudPayload = async (securityObj, settings, c7order) => {
 
   if (c7order?.shipping?.length === 1) {
     payload.shippingAmount = decimalFormat(c7order.shipping[0].price);
-    payload.shippingMethod = decimalFormat(c7order.shipping[0].title);
+    payload.shippingMethod = c7order.shipping[0].title;
+  } else if (c7order.orderDeliveryMethod === 'Pickup') {
+    payload.shippingAmount = '0.00';
+    payload.shippingMethod = 'Pickup';
+  } else if (c7order.orderDeliveryMethod === 'Carryout') {
+    payload.shippingAmount = '0.00';
+    payload.shippingMethod = 'Carryout';
   }
 
   payload.lineItems = c7order.items.map((item) => ({
