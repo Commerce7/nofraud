@@ -484,7 +484,7 @@ const noFraudPayload = async (securityObj, settings, c7order) => {
     payload.shippingMethod = 'Pickup';
   } else if (c7order.orderDeliveryMethod === 'Carry Out') {
     payload.shippingAmount = '0.00';
-    payload.shippingMethod = 'CarryOut';
+    payload.shippingMethod = 'Carry Out';
   }
 
   payload.lineItems = c7order.items.map((item) => ({
