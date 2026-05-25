@@ -116,7 +116,7 @@ export const fraudStatusWebhookFromSQS = async (message) => {
     securityObj,
     params.id
   );
-  const id = c7Order.id;
+  const { id } = c7Order;
   const c7OrderId = c7Order.attempts[0].orderSyncId;
   console.log('----------------------------6', c7OrderId);
 
@@ -181,11 +181,6 @@ const attemptSyncWithNoFraud = async (securityObj, c7order) => {
 
   if (!c7order.customer) {
     const response = invalidCustomer();
-    return response;
-  }
-
-  if (c7order.orderDeliveryMethod !== 'Ship') {
-    const response = invalidOrderDeliveryMethod();
     return response;
   }
 
@@ -399,13 +394,17 @@ const noFraudPayload = async (securityObj, settings, c7order) => {
     amount: decimalFormat(c7order.total),
     gatewayName: getGateway(c7Settings),
     gatewayStatus: 'pass',
-    cardAttempts: creditCardAttemptCount(c7order),
+    cardAttempts: String(creditCardAttemptCount(c7order)),
     customerIP: c7order.connectionInformation.customerIpAddress,
     avsResultCode: 'U', // TODO - what is this
     cvvResultCode: '1', // TODO - what is this
     currencyCode: c7Settings.currency,
+    merchant: {
+      name: securityObj.tenantId,
+      productType: 'Goods'
+    },
     order: {
-      invoiceNumber: c7order.orderNumber,
+      invoiceNumber: String(c7order.orderNumber),
       orderType: 'one-time'
     },
     billTo: {
@@ -418,8 +417,10 @@ const noFraudPayload = async (securityObj, settings, c7order) => {
       zip: billTo.zipCode,
       country: billTo.countryCode || '',
       phoneNumber: billTo.phone || ''
-    },
-    shipTo: {
+    }
+  };
+  if (c7order.orderDeliveryMethod === 'Ship') {
+    payload.shipTo = {
       firstName: shipTo.firstName || '',
       lastName: shipTo.lastName || '',
       company: shipTo.company || '',
@@ -428,8 +429,19 @@ const noFraudPayload = async (securityObj, settings, c7order) => {
       state: shipTo.stateCode || '',
       zip: shipTo.zipCode || '',
       country: shipTo.countryCode || ''
-    }
-  };
+    };
+  } else {
+    payload.shipTo = {
+      firstName: billTo.firstName || '',
+      lastName: billTo.lastName || '',
+      company: billTo.company || '',
+      address: billTo.address,
+      city: billTo.city || '',
+      state: billTo.stateCode || '',
+      zip: billTo.zipCode,
+      country: billTo.countryCode || ''
+    };
+  }
 
   const firstCreditCard = c7order.tenders.find(
     (t) => t.tenderType === 'Credit Card' && t.chargeStatus === 'Success'
@@ -466,7 +478,13 @@ const noFraudPayload = async (securityObj, settings, c7order) => {
 
   if (c7order?.shipping?.length === 1) {
     payload.shippingAmount = decimalFormat(c7order.shipping[0].price);
-    payload.shippingMethod = decimalFormat(c7order.shipping[0].title);
+    payload.shippingMethod = c7order.shipping[0].title;
+  } else if (c7order.orderDeliveryMethod === 'Pickup') {
+    payload.shippingAmount = '0.00';
+    payload.shippingMethod = 'Pickup';
+  } else if (c7order.orderDeliveryMethod === 'Carry Out') {
+    payload.shippingAmount = '0.00';
+    payload.shippingMethod = 'Carry Out';
   }
 
   payload.lineItems = c7order.items.map((item) => ({
@@ -515,20 +533,6 @@ const invalidCustomer = () => {
     errors: [
       {
         message: `Order does not have a Customer`
-      }
-    ]
-  };
-  return response;
-};
-
-const invalidOrderDeliveryMethod = () => {
-  const now = new Date();
-  const response = {
-    attemptDate: now.toISOString(),
-    type: 'Not Required',
-    errors: [
-      {
-        message: `Order is not a shipping order`
       }
     ]
   };
