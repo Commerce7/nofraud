@@ -5,11 +5,12 @@ import env from 'dotenv';
 
 import { urlSwitch } from './app/routes/routes.js';
 import { OrderSyncManager as orderSync } from './app/main/orderSync/manager.js'
+import { rollbarError } from './app/helpers/rollbar.js';
 
 env.config({ path: './.env' });
 
 export const app = async (message) => {
-  // eslint-disable-next-line no-useless-catch
+  let sqsContext;
   try {
     if (message.resource) {
       const results = await urlSwitch(message);
@@ -19,7 +20,12 @@ export const app = async (message) => {
       const source = message.Records[0].eventSource;
       switch (source) {
         case 'aws:sqs': {
-          const results = await sqsSwitch(JSON.parse(message.Records[0].body));
+          const sqsBody = JSON.parse(message.Records[0].body);
+          sqsContext = {
+            messageType: sqsBody.messageType,
+            messageAction: sqsBody.messageAction
+          };
+          const results = await sqsSwitch(sqsBody);
           return results;
         }
         default:
@@ -28,6 +34,12 @@ export const app = async (message) => {
     }
     throw Error('No idea where this came from');
   } catch (err) {
+    rollbarError(err, {
+      source: message.resource ? 'api' : 'sqs',
+      httpMethod: message.httpMethod,
+      path: message.path,
+      ...sqsContext
+    });
     throw err;
   }
 };
