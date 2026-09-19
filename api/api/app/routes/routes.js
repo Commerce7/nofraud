@@ -131,7 +131,8 @@ export const urlSwitch = async (message) => {
           const response = await routes[rPath][httpMethod](requestObj);
           return reply(response);
         } catch (err) {
-          rollbarError(err, {
+          // eslint-disable-next-line no-await-in-loop
+          await rollbarError(err, {
             path,
             httpMethod,
             tenantId: requestObj.securityObj.tenantId

@@ -34,7 +34,7 @@ export const app = async (message) => {
     }
     throw Error('No idea where this came from');
   } catch (err) {
-    rollbarError(err, {
+    await rollbarError(err, {
       source: message.resource ? 'api' : 'sqs',
       httpMethod: message.httpMethod,
       path: message.path,
