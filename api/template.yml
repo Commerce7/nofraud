@@ -36,6 +36,7 @@ Parameters:
     Type: String
   RollbarAccessToken:
     Type: String
+    NoEcho: true
 
 Resources:
   AppSecrets:

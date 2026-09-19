@@ -10,6 +10,11 @@ const rollbar = new Rollbar({
 // returns, which can cut off Rollbar's async delivery before it completes.
 // Returning a promise that resolves only once the item has actually been
 // sent lets callers `await` it before responding, guaranteeing delivery.
+// The wait is bounded so a slow/unreachable Rollbar can't hang the actual
+// user-facing response -- worst case we just skip reporting this once and
+// let the caller continue.
+const ROLLBAR_FLUSH_TIMEOUT_MS = 3000;
+
 const executeRollbar =
   (method) =>
   (...args) =>
@@ -19,8 +24,20 @@ const executeRollbar =
         return;
       }
 
+      let settled = false;
+      const timeoutId = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          resolve(null);
+        }
+      }, ROLLBAR_FLUSH_TIMEOUT_MS);
+
       rollbar[method](...args, (err, resp) => {
-        resolve(err ? null : resp);
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeoutId);
+          resolve(err ? null : resp);
+        }
       });
     });
 
