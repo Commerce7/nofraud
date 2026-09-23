@@ -4,6 +4,8 @@ import { orderCardController as orderCard } from '../main/orderCard/controller.j
 import { orderSyncController as orderSync } from '../main/orderSync/controller.js';
 import { scheduledTaskController as scheduledTask } from '../main/scheduledTask/controller.js';
 import { tenantController as tenant } from '../main/tenant/controller.js';
+import { apiError } from '../helpers/apiError.js';
+import { rollbarError } from '../helpers/rollbar.js';
 
 // eslint-disable-next-line import/prefer-default-export
 export const urlSwitch = async (message) => {
@@ -70,9 +72,9 @@ export const urlSwitch = async (message) => {
     return false;
   };
 
-  const reply = (results) => {
+  const reply = (results, statusCode = 200) => {
     const response = {
-      statusCode: 200,
+      statusCode,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
@@ -129,8 +131,14 @@ export const urlSwitch = async (message) => {
           const response = await routes[rPath][httpMethod](requestObj);
           return reply(response);
         } catch (err) {
-          // TODO - handle error response
-          console.log(err);
+          // eslint-disable-next-line no-await-in-loop
+          await rollbarError(err, {
+            path,
+            httpMethod,
+            tenantId: requestObj.securityObj.tenantId
+          });
+          const { statusCode, apiError: apiErrorBody } = apiError(err);
+          return reply(apiErrorBody, statusCode);
         }
       }
     }

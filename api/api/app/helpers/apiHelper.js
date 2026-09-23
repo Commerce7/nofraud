@@ -1,15 +1,10 @@
 // import { DeleteCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
-// import Rollbar from 'rollbar';
 import Sequelize from 'sequelize';
 
 // import { ddbDocClient3 } from '../../../dynamodb3';
 import { sequelize } from '../../models.js';
 
 import CustomError from './error.js';
-
-// const rollbar = new Rollbar({
-//   accessToken: '0c91f2e2a646414f9cb54a5d9f7ef9e2'
-// });
 
 // export const sleep = async (ms) => {
 //   await new Promise((resolve) => setTimeout(resolve, ms));

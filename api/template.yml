@@ -34,6 +34,9 @@ Parameters:
     Type: String
   AppApiPassword:
     Type: String
+  RollbarAccessToken:
+    Type: String
+    NoEcho: true
 
 Resources:
   AppSecrets:
@@ -49,7 +52,8 @@ Resources:
         "nofraud_api_url" : "${NoFraudApiUrl}",
         "nofraud_portal_api_url" : "${NoFraudPortalApiUrl}",
         "app_api_username" : "${AppApiUsername}",
-        "app_api_password" : "${AppApiPassword}"
+        "app_api_password" : "${AppApiPassword}",
+        "rollbar_access_token" : "${RollbarAccessToken}"
         }'
   APP:
     Type: AWS::Serverless::Function
@@ -103,6 +107,7 @@ Resources:
           NOFRAUD_PORTAL_API_URL: !Sub '{{resolve:secretsmanager:/nofraud/env:SecretString:nofraud_portal_api_url}}'
           APP_API_USERNAME: !Sub '{{resolve:secretsmanager:/nofraud/env:SecretString:app_api_username}}'
           APP_API_PASSWORD: !Sub '{{resolve:secretsmanager:/nofraud/env:SecretString:app_api_password}}'
+          ROLLBAR_ACCESS_TOKEN: !Sub '{{resolve:secretsmanager:/nofraud/env:SecretString:rollbar_access_token}}'
           SQS_IS_ENABLED: true
           FORCE_DEPLOY: !Ref ForceDeploy
 
