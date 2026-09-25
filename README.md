@@ -46,59 +46,40 @@ API Container
 - Run aws configure sso and choose Commerce7 as session name, select Commerce7Apps account, choose the role, use default region and profile name to nofraud.
 - Domain registered in AWS Route53 or at a minimum the DNS hosted by Route53 for the domain.
 
+#### Shared infrastructure
+
+NoFraud runs on the shared VPC, NAT gateways and Aurora MySQL cluster (`mysql8-app-cluster`) in the Commerce7 Apps account. That infrastructure is deployed as the `app-shared-infrastructure` CloudFormation stack and is managed from the [Vinoshipper repo](https://github.com/Commerce7/vinoshipper), not from here. NoFraud's `api/template.yml` only imports its outputs (subnets, DB host, security groups, certificate).
+
+Do not deploy shared infrastructure from this repo.
+
 #### Initial setup
 
-- Copy the build/production/secrets/production-parameters-sample.json to build/production/secrets/production-parameters.json and populate variables.
+- Get the production deploy files from 1Password (Fullsteam account, **Commerce7 - Development** vault). They are not committed to this repo:
+  - `nofraud - env.production 260924` → save as `api/.env.production` (use `api/.env-sample` for the list of keys).
+  - `nofraud - samconfig.toml 260924` → save as `api/samconfig.toml`. SAM reads it from the directory `npm run deploy` runs in (`api/`), and needs it to resolve the deployment S3 bucket.
+  - `nofraud - deploy.sh 260924` → copy of the deploy script used for the 2026-09-24 production deploy, for reference.
+  - `nofraud - production-parameters.json 260924` → parameters for the shared infrastructure stack only. Not used by NoFraud's own deploy, since shared infrastructure is managed from the Vinoshipper repo.
 
-  - VpcSubnet: Should be a valid AWS Internal VPC subnet if you have multiple VPCs ensure this one does not overlap.
-  - DbAdminUsername: This will be the username for the production aurora instance
-  - DbAdminPassword: This will be the password for the production aurora instance
-  - CertificateDomainName: The domain name you registered or added DNS hosting for in Route53
-  - HostedZoneId: The hostedZoneId - get this from Route53 for the domain you registered.
+> **Temporary setup.** Keeping production secrets in local files is a stopgap. These will move to AWS Secrets Manager ([SC-25850](https://app.shortcut.com/commerce7/story/25850)) and deploys will run from AWS CodeBuild ([SC-25849](https://app.shortcut.com/commerce7/story/25849)), after which no local `.env.production` or `samconfig.toml` will be needed.
 
-- Copy the .env-sample to .env.production and populate the variables
+### Running production database migrations
 
-### Deploying infrastructure
+The bastion host was removed from the shared infrastructure. Connect to the production database over the VPN instead.
 
-- Deploy Shared VPC, Aurora Database and ECS Cluster
-
-```
-cd api
-npm run deploy:shared:infrastructure
-```
-
-- Get the Bastion Host keypair.pem file saved to secrets already in .gitignore
+- Make sure you are connected to the VPN
+- In `.env.production`, point the database at the Aurora writer endpoint directly (RDS → Databases → `mysql8-app-cluster`):
 
 ```
-npm run get:keypair
-```
-
-- Login to AWS
-
-  - navigate to RDS --> Databases --> myslq8-app-cluster and copy the writer endpoint name
-  - navigate to EC2 --> Instances --> app-shared-infrastructure-bastion and copy the public IPv4 DNS
-
-- Update the script in package.json replacing the cluster name and ec2-user IP address.
-
-```
-"start:bastion": "ssh -i build/production/bastion-keypair.pem -f -N -L 4416:mysql8-app-cluster.cluster-cbg8bxyosl30.us-west-2.rds.amazonaws.com:3306 ec2-user@35.165.67.213 -vvv",
+DB_WRITER_HOST=mysql8-app-cluster.cluster-cqfav9pnem8u.us-west-2.rds.amazonaws.com
+DB_READER_HOST=mysql8-app-cluster.cluster-cqfav9pnem8u.us-west-2.rds.amazonaws.com
+DB_PORT=3306
 ```
 
 - Run create database and migrations
 
 ```
-[Open a new terminal window and keep it open until migrations are complete.]
-npm run start:bastion
-
-[open new terminal window and run migrations]
 npm run sequelize:prod:create
 npm run sequelize:prod:migrate
-```
-
-- Deploy ECR Repo, Push Docker Image, Deploy ALB and ECS Containers (single npm script to run all three)
-
-```
-npm run deploy:app:infrastructure
 ```
 
 ### Deploying the APP
