@@ -54,8 +54,8 @@ Do not deploy shared infrastructure from this repo.
 
 #### Initial setup
 
-- Copy the .env-sample to .env.production and populate the variables
 - Get the production deploy files from 1Password (Fullsteam account, **Commerce7 - Development** vault). They are not committed to this repo:
+  - `nofraud - env.production 260924` → save as `api/.env.production` (use `api/.env-sample` for the list of keys).
   - `nofraud - samconfig.toml 260924` → save as `api/samconfig.toml`. SAM reads it from the directory `npm run deploy` runs in (`api/`), and needs it to resolve the deployment S3 bucket.
   - `nofraud - deploy.sh 260924` → copy of the deploy script used for the 2026-09-24 production deploy, for reference.
   - `nofraud - production-parameters.json 260924` → parameters for the shared infrastructure stack only. Not used by NoFraud's own deploy, since shared infrastructure is managed from the Vinoshipper repo.
