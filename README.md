@@ -64,30 +64,20 @@ Do not deploy shared infrastructure from this repo.
 
 ### Running production database migrations
 
-- Get the Bastion Host keypair.pem file saved to secrets already in .gitignore
+The bastion host was removed from the shared infrastructure. Connect to the production database over the VPN instead.
+
+- Make sure you are connected to the VPN
+- In `.env.production`, point the database at the Aurora writer endpoint directly (RDS → Databases → `mysql8-app-cluster`):
 
 ```
-npm run get:keypair
-```
-
-- Login to AWS
-
-  - navigate to RDS --> Databases --> myslq8-app-cluster and copy the writer endpoint name
-  - navigate to EC2 --> Instances --> app-shared-infrastructure-bastion and copy the public IPv4 DNS
-
-- Update the script in package.json replacing the cluster name and ec2-user IP address.
-
-```
-"start:bastion": "ssh -i build/production/bastion-keypair.pem -f -N -L 4416:mysql8-app-cluster.cluster-cbg8bxyosl30.us-west-2.rds.amazonaws.com:3306 ec2-user@35.165.67.213 -vvv",
+DB_WRITER_HOST=mysql8-app-cluster.cluster-cqfav9pnem8u.us-west-2.rds.amazonaws.com
+DB_READER_HOST=mysql8-app-cluster.cluster-cqfav9pnem8u.us-west-2.rds.amazonaws.com
+DB_PORT=3306
 ```
 
 - Run create database and migrations
 
 ```
-[Open a new terminal window and keep it open until migrations are complete.]
-npm run start:bastion
-
-[open new terminal window and run migrations]
 npm run sequelize:prod:create
 npm run sequelize:prod:migrate
 ```
