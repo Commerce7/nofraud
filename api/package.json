@@ -15,7 +15,6 @@
     "start:bastion": "ssh -i build/production/secrets/bastion-keypair.pem -f -N -L 4416:mysql8-app-cluster.cluster-cqfav9pnem8u.us-west-2.rds.amazonaws.com:3306 ec2-user@35.160.46.198 -vvv",
     "test": "cd api && mocha --import=tsx/esm -t 30000 -s 1000 'app/**/*.test.js'",
     "killall": "docker-compose --env-file .env.development -f build/development/docker-compose.yml kill",
-    "deploy:shared:infrastructure": "build/production/scripts/deploy-shared-infrastructure.sh",
     "deploy": "npm run set:production:env && build/production/scripts/deploy.sh",
     "sequelize:dev:create": "npm run set:development:env && cd api && NODE_ENV=development sequelize --env development db:create",
     "sequelize:prod:create": "npm run set:production:env && cd api && NODE_ENV=production sequelize --env production db:create",

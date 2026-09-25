@@ -46,26 +46,17 @@ API Container
 - Run aws configure sso and choose Commerce7 as session name, select Commerce7Apps account, choose the role, use default region and profile name to nofraud.
 - Domain registered in AWS Route53 or at a minimum the DNS hosted by Route53 for the domain.
 
+#### Shared infrastructure
+
+NoFraud runs on the shared VPC, NAT gateways, Aurora MySQL cluster (`mysql8-app-cluster`) and bastion host in the Commerce7 Apps account. That infrastructure is deployed as the `app-shared-infrastructure` CloudFormation stack and is managed from the [Vinoshipper repo](https://github.com/Commerce7/vinoshipper), not from here. NoFraud's `api/template.yml` only imports its outputs (subnets, DB host, security groups, certificate).
+
+Do not deploy shared infrastructure from this repo.
+
 #### Initial setup
-
-- Copy the build/production/secrets/production-parameters-sample.json to build/production/secrets/production-parameters.json and populate variables.
-
-  - VpcSubnet: Should be a valid AWS Internal VPC subnet if you have multiple VPCs ensure this one does not overlap.
-  - DbAdminUsername: This will be the username for the production aurora instance
-  - DbAdminPassword: This will be the password for the production aurora instance
-  - CertificateDomainName: The domain name you registered or added DNS hosting for in Route53
-  - HostedZoneId: The hostedZoneId - get this from Route53 for the domain you registered.
 
 - Copy the .env-sample to .env.production and populate the variables
 
-### Deploying infrastructure
-
-- Deploy Shared VPC, Aurora Database and ECS Cluster
-
-```
-cd api
-npm run deploy:shared:infrastructure
-```
+### Running production database migrations
 
 - Get the Bastion Host keypair.pem file saved to secrets already in .gitignore
 
@@ -93,12 +84,6 @@ npm run start:bastion
 [open new terminal window and run migrations]
 npm run sequelize:prod:create
 npm run sequelize:prod:migrate
-```
-
-- Deploy ECR Repo, Push Docker Image, Deploy ALB and ECS Containers (single npm script to run all three)
-
-```
-npm run deploy:app:infrastructure
 ```
 
 ### Deploying the APP
