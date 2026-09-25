@@ -48,7 +48,7 @@ API Container
 
 #### Shared infrastructure
 
-NoFraud runs on the shared VPC, NAT gateways, Aurora MySQL cluster (`mysql8-app-cluster`) and bastion host in the Commerce7 Apps account. That infrastructure is deployed as the `app-shared-infrastructure` CloudFormation stack and is managed from the [Vinoshipper repo](https://github.com/Commerce7/vinoshipper), not from here. NoFraud's `api/template.yml` only imports its outputs (subnets, DB host, security groups, certificate).
+NoFraud runs on the shared VPC, NAT gateways and Aurora MySQL cluster (`mysql8-app-cluster`) in the Commerce7 Apps account. That infrastructure is deployed as the `app-shared-infrastructure` CloudFormation stack and is managed from the [Vinoshipper repo](https://github.com/Commerce7/vinoshipper), not from here. NoFraud's `api/template.yml` only imports its outputs (subnets, DB host, security groups, certificate).
 
 Do not deploy shared infrastructure from this repo.
 
