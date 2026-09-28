@@ -55,11 +55,17 @@ Do not deploy shared infrastructure from this repo.
 #### Initial setup
 
 - Get the production deploy files from 1Password (Fullsteam account, **Commerce7 - Development** vault). They are not committed to this repo:
-  - `nofraud - env.production 260924` → save as `api/.env.production` (use `api/.env-sample` for the list of keys).
+  - `nofraud - env.production 260924` → save as `api/.env.production`. The deploy only reads `APP_NAME`, `API_DOMAIN_NAME`, `HOSTED_ZONE_ID` and `FORCE_DEPLOY` from it; the `DB_*` values are used for production migrations.
   - `nofraud - samconfig.toml 260924` → save as `api/samconfig.toml`. SAM reads it from the directory `npm run deploy` runs in (`api/`), and needs it to resolve the deployment S3 bucket.
   - `nofraud - deploy.sh 260924` → copy of the deploy script used for the 2026-09-24 production deploy, for reference.
 
-> **Temporary setup.** Keeping production secrets in local files is a stopgap. These will move to AWS Secrets Manager ([SC-25850](https://app.shortcut.com/commerce7/story/25850)) and deploys will run from AWS CodeBuild ([SC-25849](https://app.shortcut.com/commerce7/story/25849)), after which no local `.env.production` or `samconfig.toml` will be needed.
+#### App secrets
+
+The app's secrets (C7 app credentials, SendGrid key, NoFraud URLs, app API credentials, Rollbar token) live in the `/nofraud/env` secret in AWS Secrets Manager (Commerce7 Apps account). It is managed by hand, not by this repo's CloudFormation.
+
+- To change a value: edit `/nofraud/env` in the AWS console, then run `npm run deploy`. The Lambda reads these values at deploy time, so changes don't apply until the next deploy.
+
+> **Temporary setup.** Deploys still run from a laptop with a local `samconfig.toml`. They will move to AWS CodeBuild ([SC-25849](https://app.shortcut.com/commerce7/story/25849)).
 
 ### Running production database migrations
 
