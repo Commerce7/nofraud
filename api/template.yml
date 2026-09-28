@@ -302,6 +302,6 @@ Resources:
           Value: !Ref APP
       Period: 300
       EvaluationPeriods: 1
-      Threshold: 10
+      Threshold: 150
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
