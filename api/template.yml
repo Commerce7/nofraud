@@ -41,6 +41,8 @@ Parameters:
 Resources:
   AppSecrets:
     Type: AWS::SecretsManager::Secret
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       Name: !Sub '/${AWS::StackName}/env'
       Description: 'Secrets used for this APP'
