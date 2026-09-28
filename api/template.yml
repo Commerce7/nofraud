@@ -15,51 +15,15 @@ Parameters:
   HostedZoneId:
     Description: Route53 Domain Hosted ZoneId
     Type: String
-  C7ApiUrl:
-    Type: String
-  C7AppId:
-    Type: String
-  C7AppSecret:
-    Type: String
-  SendGridApiKey:
-    Type: String
-  NoFraudApiUrl:
-    Type: String
-  NoFraudPortalApiUrl:
-    Type: String
   ForceDeploy:
     Type: String
     Default: False
-  AppApiUsername:
-    Type: String
-  AppApiPassword:
-    Type: String
-  RollbarAccessToken:
-    Type: String
-    NoEcho: true
 
 Resources:
-  AppSecrets:
-    Type: AWS::SecretsManager::Secret
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      Name: !Sub '/${AWS::StackName}/env'
-      Description: 'Secrets used for this APP'
-      SecretString: !Sub '{
-        "c7_api_url" : "${C7ApiUrl}",
-        "c7_app_id" : "${C7AppId}",
-        "c7_app_secret" : "${C7AppSecret}",
-        "sendgrid_api_key" : "${SendGridApiKey}",
-        "nofraud_api_url" : "${NoFraudApiUrl}",
-        "nofraud_portal_api_url" : "${NoFraudPortalApiUrl}",
-        "app_api_username" : "${AppApiUsername}",
-        "app_api_password" : "${AppApiPassword}",
-        "rollbar_access_token" : "${RollbarAccessToken}"
-        }'
+  # /nofraud/env is managed by hand in Secrets Manager (not by this stack); the
+  # Lambda only reads it. Redeploy after editing it so new values are picked up.
   APP:
     Type: AWS::Serverless::Function
-    DependsOn: AppSecrets
     Properties:
       Handler: index.app
       Runtime: nodejs20.x
