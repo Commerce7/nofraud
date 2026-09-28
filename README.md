@@ -61,9 +61,13 @@ Do not deploy shared infrastructure from this repo.
 
 #### App secrets
 
-The app's secrets (C7 app credentials, SendGrid key, NoFraud URLs, app API credentials, Rollbar token) live in the `/nofraud/env` secret in AWS Secrets Manager (Commerce7 Apps account). It is managed by hand, not by this repo's CloudFormation.
+The app's secrets (C7 app credentials, SendGrid key, NoFraud URLs, app API credentials, Rollbar token) live in the [`/nofraud/env` secret](https://us-west-2.console.aws.amazon.com/secretsmanager/secret?name=%2Fnofraud%2Fenv&region=us-west-2) in AWS Secrets Manager (Commerce7 Apps account). It is managed by hand in the console, not by this repo's CloudFormation.
 
-- To change a value: edit `/nofraud/env` in the AWS console, then run `npm run deploy`. The Lambda reads these values at deploy time, so changes don't apply until the next deploy.
+To change a value, edit the secret and redeploy. The Lambda only picks up new values when it's redeployed:
+
+1. Edit `/nofraud/env` in the AWS console (Retrieve secret value → Edit).
+2. Change `FORCE_DEPLOY` in `api/.env.production` (e.g. to today's date). Otherwise the deploy sees no changes and skips the Lambda.
+3. Run `npm run deploy`.
 
 > **Temporary setup.** Deploys still run from a laptop with a local `samconfig.toml`. They will move to AWS CodeBuild ([SC-25849](https://app.shortcut.com/commerce7/story/25849)).
 
